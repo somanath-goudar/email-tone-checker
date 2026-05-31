@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Email Tone & Length Checker — Does My Email Sound Rude?</title>
+  <meta name="description" content="Paste your email draft and instantly find out if it sounds rude, passive-aggressive, too long, or full of filler phrases. Free, no signup, 100% client-side." />
+  <link rel="canonical" href="https://email-tone-checker.vercel.app/" />
+  <meta property="og:title" content="Email Tone & Length Checker" />
+  <meta property="og:description" content="Does my email sound rude? Paste your draft for instant tone, length, filler phrase, and readability analysis." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://email-tone-checker.vercel.app/" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Email Tone & Length Checker" />
+  <meta name="twitter:description" content="Instant analysis: tone, length, filler phrases, passive voice, readability. Free and private." />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Email Tone & Length Checker",
+    "url": "https://email-tone-checker.vercel.app/",
+    "description": "Free tool to analyse email tone, length, filler phrases, passive voice, and readability instantly in your browser.",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Any",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://email-tone-checker.vercel.app/" }
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Does my email sound rude?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Paste your email into our checker. It scans for aggressive phrases, passive-aggressive patterns, overly blunt sentences, and flags exactly which lines may read as rude or confrontational." }
+      },
+      {
+        "@type": "Question",
+        "name": "What is the ideal length for a business email?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Research suggests 50–125 words gets the highest reply rate. Our tool flags emails under 30 words (too abrupt) and over 200 words (too long), with a sweet-spot indicator at 75–150 words." }
+      },
+      {
+        "@type": "Question",
+        "name": "What are filler phrases in emails?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Filler phrases are generic openers or closers that add no value — 'Hope this email finds you well', 'Just checking in', 'As per my last email', 'Please find attached', 'Touching base'. They make emails feel impersonal and waste the reader's time." }
+      },
+      {
+        "@type": "Question",
+        "name": "Is my email text stored or sent anywhere?",
+        "acceptedAnswer": { "@type": "Answer", "text": "No. All analysis runs entirely in your browser using JavaScript. Nothing is ever sent to a server. Your email text is 100% private." }
+      },
+      {
+        "@type": "Question",
+        "name": "What is passive voice in emails and why does it matter?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Passive voice ('the report was sent by me') is weaker and less clear than active voice ('I sent the report'). High passive voice makes emails sound evasive or bureaucratic. Our tool counts passive constructions and suggests rewrites." }
+      },
+      {
+        "@type": "Question",
+        "name": "How is the Flesch-Kincaid readability score calculated?",
+        "acceptedAnswer": { "@type": "Answer", "text": "The Flesch Reading Ease score measures how easy text is to read, based on sentence length and syllable count. Scores above 60 are easy to read (ideal for email). Lower scores indicate dense, complex writing." }
+      }
+    ]
+  }
+  </script>
+  <style>
+    :root {
+      --bg: #f7f8fa;
+      --surface: #ffffff;
+      --border: #e5e7eb;
+      --text: #111827;
+      --muted: #6b7280;
+      --accent: #4f46e5;
+      --accent-light: #eef2ff;
+      --accent-hover: #4338ca;
+      --green: #16a34a;
+      --green-light: #dcfce7;
+      --yellow: #d97706;
+      --yellow-light: #fef9c3;
+      --red: #dc2626;
+      --red-light: #fee2e2;
+      --orange: #ea580c;
+      --orange-light: #ffedd5;
+      --blue: #2563eb;
+      --blue-light: #dbeafe;
+      --radius: 12px;
+      --shadow: 0 2px 16px rgba(0,0,0,0.06);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; min-height: 100vh; }
+
+    header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 24px; }
+    header h1 { font-size: 1.15rem; font-weight: 700; }
+    header p { font-size: .8rem; color: var(--muted); margin-top: 3px; }
+
+    .main-layout { max-width: 1060px; margin: 0 auto; padding: 24px 16px; display: grid; grid-template-columns: 1fr 380px; gap: 20px; align-items: start; }
+    @media (max-width: 820px) { .main-layout { grid-template-columns: 1fr; } }
+
+    /* Input panel */
+    .input-panel { display: flex; flex-direction: column; gap: 12px; }
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); }
+    .panel-title { font-size: .76rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 12px; }
+
+    textarea {
+      width: 100%; min-height: 260px; border: 1px solid var(--border); border-radius: 10px;
+      padding: 14px; font-size: .93rem; line-height: 1.65; resize: vertical;
+      background: var(--bg); color: var(--text); font-family: inherit;
+    }
+    textarea:focus { outline: none; border-color: var(--accent); }
+    .textarea-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+    .word-count { font-size: .75rem; color: var(--muted); }
+    .btn-row { display: flex; gap: 8px; }
+    .btn { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 9px 18px; font-size: .88rem; font-weight: 600; cursor: pointer; }
+    .btn:hover { background: var(--accent-hover); }
+    .btn-ghost { background: none; border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 9px 14px; font-size: .88rem; cursor: pointer; }
+    .btn-ghost:hover { background: var(--border); }
+
+    /* Highlighted preview */
+    .preview-box {
+      border: 1px solid var(--border); border-radius: 10px; padding: 14px;
+      font-size: .93rem; line-height: 1.65; background: var(--bg);
+      min-height: 80px; white-space: pre-wrap; word-break: break-word;
+    }
+    mark.filler   { background: #fde68a; border-radius: 3px; padding: 1px 2px; }
+    mark.passive  { background: #bfdbfe; border-radius: 3px; padding: 1px 2px; }
+    mark.aggressive { background: #fecaca; border-radius: 3px; padding: 1px 2px; }
+    mark.weak-open { background: #e9d5ff; border-radius: 3px; padding: 1px 2px; }
+
+    /* Results panel */
+    .results-panel { display: flex; flex-direction: column; gap: 14px; }
+
+    /* Score card */
+    .score-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); }
+    .overall-row { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+    .tone-badge { display: inline-flex; align-items: center; gap: 6px; border-radius: 8px; padding: 6px 12px; font-size: .82rem; font-weight: 700; }
+    .tone-optimal      { background: var(--green-light); color: var(--green); }
+    .tone-casual       { background: var(--yellow-light); color: var(--yellow); }
+    .tone-formal       { background: var(--blue-light); color: var(--blue); }
+    .tone-aggressive   { background: var(--red-light); color: var(--red); }
+    .tone-passive-ag   { background: var(--orange-light); color: var(--orange); }
+
+    .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .metric { background: var(--bg); border-radius: 8px; padding: 10px 12px; }
+    .metric-label { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 4px; }
+    .metric-value { font-size: 1rem; font-weight: 700; }
+    .metric-sub { font-size: .72rem; color: var(--muted); margin-top: 2px; }
+    .val-good   { color: var(--green); }
+    .val-warn   { color: var(--yellow); }
+    .val-bad    { color: var(--red); }
+    .val-info   { color: var(--blue); }
+
+    /* Issues list */
+    .issues-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
+    .issue-item { border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; font-size: .82rem; line-height: 1.5; }
+    .issue-item:last-child { margin-bottom: 0; }
+    .issue-label { font-weight: 700; font-size: .7rem; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 3px; }
+    .issue-text { color: var(--text); }
+    .issue-fix { color: var(--muted); font-style: italic; margin-top: 3px; font-size: .78rem; }
+    .issue-filler     { background: #fffbeb; border-left: 3px solid var(--yellow); }
+    .issue-aggressive { background: #fef2f2; border-left: 3px solid var(--red); }
+    .issue-passive    { background: #eff6ff; border-left: 3px solid var(--blue); }
+    .issue-length     { background: #f0fdf4; border-left: 3px solid var(--green); }
+    .issue-structure  { background: #fdf4ff; border-left: 3px solid #a855f7; }
+    .issue-call       { background: #fff7ed; border-left: 3px solid var(--orange); }
+    .no-issues { text-align: center; padding: 20px; color: var(--green); font-size: .9rem; font-weight: 600; }
+
+    /* Legend */
+    .legend { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: .7rem; color: var(--muted); }
+    .legend-swatch { width: 12px; height: 12px; border-radius: 2px; }
+
+    /* How it works + FAQ */
+    .info-wrap { max-width: 1060px; margin: 0 auto; padding: 0 16px 40px; }
+    .section-label { font-size: .76rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 12px; }
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 32px; }
+    .step { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+    .step-num { width: 28px; height: 28px; background: var(--accent-light); color: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .8rem; margin-bottom: 8px; }
+    .step h3 { font-size: .88rem; font-weight: 700; margin-bottom: 4px; }
+    .step p { font-size: .76rem; color: var(--muted); line-height: 1.5; }
+    .faq-list { display: flex; flex-direction: column; gap: 8px; }
+    .faq-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+    .faq-q { padding: 12px 14px; font-size: .88rem; font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .faq-q:hover { background: var(--bg); }
+    .faq-a { padding: 0 14px 12px; font-size: .82rem; color: var(--muted); line-height: 1.6; display: none; }
+    .faq-item.open .faq-a { display: block; }
+    .faq-chevron { transition: transform .2s; flex-shrink: 0; }
+    .faq-item.open .faq-chevron { transform: rotate(180deg); }
+    footer { border-top: 1px solid var(--border); padding: 20px; text-align: center; font-size: .76rem; color: var(--muted); }
+    footer a { color: var(--muted); margin: 0 8px; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Email Tone &amp; Length Checker</h1>
+  <p>Does your email sound rude? Too long? Full of filler? Find out in seconds.</p>
+</header>
+
+<div class="main-layout">
+  <!-- LEFT: input + preview -->
+  <div class="input-panel">
+    <div class="panel">
+      <p class="panel-title">Paste Your Email Draft</p>
+      <textarea id="email-input" placeholder="Paste your email body here (subject line optional)..." oninput="onInput()"></textarea>
+      <div class="textarea-footer">
+        <span class="word-count" id="wc-display">0 words</span>
+        <div class="btn-row">
+          <button class="btn-ghost" onclick="clearInput()">Clear</button>
+          <button class="btn" onclick="analyse()">Analyse Email</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="preview-panel" style="display:none">
+      <p class="panel-title">Annotated Preview</p>
+      <div class="preview-box" id="preview-box"></div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-swatch" style="background:#fde68a"></div>Filler phrase</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#fecaca"></div>Aggressive</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#bfdbfe"></div>Passive voice</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#e9d5ff"></div>Weak opener/closer</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: results -->
+  <div class="results-panel" id="results-panel">
+    <div class="panel" style="text-align:center;padding:40px 20px;color:var(--muted);font-size:.88rem">
+      <div style="font-size:2rem;margin-bottom:8px">✉️</div>
+      Paste your email and click <strong>Analyse Email</strong>
+    </div>
+  </div>
+</div>
+
+<div class="info-wrap">
+  <p class="section-label">How It Works</p>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><h3>Paste Your Draft</h3><p>Copy and paste your email body. Subject line optional. Works with any language that uses Latin characters.</p></div>
+    <div class="step"><div class="step-num">2</div><h3>Get Instant Analysis</h3><p>Tone, length, filler phrases, passive voice, readability, and structure — all checked in under a second.</p></div>
+    <div class="step"><div class="step-num">3</div><h3>Read the Highlights</h3><p>Problematic phrases are colour-coded in the annotated preview so you know exactly what to fix.</p></div>
+    <div class="step"><div class="step-num">4</div><h3>Fix and Resend</h3><p>Each issue card includes a specific rewrite suggestion. Edit your email above and re-check any time.</p></div>
+  </div>
+
+  <p class="section-label">Frequently Asked Questions</p>
+  <div class="faq-list" id="faq-list"></div>
+</div>
+
+<footer>
+  <span>© 2026 Email Tone &amp; Length Checker</span>
+  <a href="privacy.html">Privacy Policy</a>
+  <a href="terms.html">Terms of Use</a>
+</footer>
+
+<script>
+// ─── PATTERNS ─────────────────────────────────────────────────────────────────
+
+const FILLER_PHRASES = [
+  { match: /hope\s+this\s+(email\s+)?finds\s+you\s+well/gi,     fix: 'Remove — jump straight to your point.' },
+  { match: /just\s+checking\s+in/gi,                             fix: 'Be specific: "Following up on X from [date]"' },
+  { match: /touching\s+base/gi,                                  fix: '"Following up" or state your actual need.' },
+  { match: /as\s+per\s+my\s+(last|previous)\s+email/gi,         fix: 'Summarise the key point instead of referencing back.' },
+  { match: /please\s+find\s+(attached|enclosed)/gi,             fix: '"I have attached X" or "Attached is X"' },
+  { match: /i\s+am\s+writing\s+to/gi,                           fix: 'Delete and state your point directly.' },
+  { match: /do\s+not\s+hesitate\s+to\s+(contact|reach)/gi,      fix: '"Feel free to reply" or "Let me know if you have questions"' },
+  { match: /at\s+your\s+(earliest\s+)?convenience/gi,            fix: 'Give a specific date: "by Friday" or "when you get a chance"' },
+  { match: /going\s+forward/gi,                                  fix: '"From now on" or be specific about the change.' },
+  { match: /synergy|circle\s+back|leverage|bandwidth/gi,         fix: 'Use plain English: "work together", "follow up", "use", "time"' },
+  { match: /per\s+our\s+(conversation|discussion|call)/gi,       fix: '"As we discussed [topic]" — be specific.' },
+  { match: /kindly\s+(note|be\s+advised)/gi,                     fix: 'Remove "kindly" — it sounds passive-aggressive in English.' },
+  { match: /it\s+has\s+come\s+to\s+my\s+attention/gi,           fix: '"I noticed that" or "I saw that"' },
+  { match: /i\s+wanted\s+to\s+(reach\s+out|follow\s+up)/gi,     fix: '"I am following up on X" — be direct.' },
+  { match: /warm\s+regards|best\s+regards|kind\s+regards/gi,    fix: null }, // OK, don't flag closers unless asked
+];
+
+const AGGRESSIVE = [
+  { match: /as\s+i\s+(previously|already)\s+(mentioned|stated|said|noted)/gi, label: 'Accusatory repetition',      fix: '"As mentioned on [date]" or just restate the point.' },
+  { match: /clearly\b/gi,                                                      label: 'Dismissive ("clearly")',     fix: 'Remove — it implies the reader is slow or inattentive.' },
+  { match: /obviously\b/gi,                                                    label: 'Dismissive ("obviously")',   fix: 'Remove — condescending tone.' },
+  { match: /\bfyi\b/gi,                                                        label: 'Passive-aggressive FYI',    fix: 'Reframe: "I wanted to make sure you saw..." or remove.' },
+  { match: /not\s+sure\s+if\s+you\s+(saw|received|got)\s+my/gi,               label: 'Guilt-trip follow-up',      fix: '"Following up on my email from [date] — still waiting on X."' },
+  { match: /i\s+have\s+told\s+you/gi,                                          label: 'Confrontational',           fix: '"As we discussed" — softer and more professional.' },
+  { match: /you\s+(failed|forgot|ignored|missed)/gi,                           label: 'Accusatory "you failed"',   fix: '"This item was not completed" — use passive or object-focus.' },
+  { match: /this\s+is\s+unacceptable/gi,                                       label: 'Harsh judgment',            fix: '"This falls short of expectations. Can we discuss a fix?" ' },
+  { match: /why\s+haven.t\s+you/gi,                                            label: 'Accusatory question',       fix: '"Could you provide an update on X?"' },
+  { match: /i\s+cannot\s+believe/gi,                                           label: 'Emotional outburst',        fix: 'State the issue factually and propose a path forward.' },
+  { match: /\bASAP\b/g,                                                        label: 'Urgency pressure (ASAP)',   fix: 'Give a real deadline: "by 5pm Thursday" is clearer and less stressful.' },
+  { match: /need\s+this\s+(now|immediately|urgently)/gi,                       label: 'Demanding tone',            fix: '"Could you prioritise this? I need it by [date/time]."' },
+];
+
+// Common passive voice: "to be" verb + past participle
+const PASSIVE_RE = /\b(is|are|was|were|be|been|being)\s+(\w+ed)\b/gi;
+
+// Weak openers / sign-off issues
+const WEAK_OPENERS = [
+  /^(hi|hello|hey|dear)\s+\w+[,.]?\s*\n?(hope|just|i\s+am\s+writing)/im,
+  /^hope\s+you/im,
+  /^just\s+wanted\s+to/im,
+];
+
+// ─── ANALYSIS ENGINE ──────────────────────────────────────────────────────────
+
+function countWords(text) {
+  return text.trim().split(/\s+/).filter(w => w.length > 0).length;
+}
+
+function countSyllables(word) {
+  word = word.toLowerCase().replace(/[^a-z]/g,'');
+  if (word.length <= 3) return 1;
+  word = word.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/,'').replace(/^y/,'');
+  const m = word.match(/[aeiouy]{1,2}/g);
+  return m ? m.length : 1;
+}
+
+function fleschScore(text) {
+  const sentences = text.split(/[.!?]+/).filter(s=>s.trim().length>0).length || 1;
+  const words     = text.trim().split(/\s+/).filter(w=>w.length>0);
+  const wc        = words.length || 1;
+  const syllables = words.reduce((n,w)=>n+countSyllables(w),0);
+  const score     = 206.835 - 1.015*(wc/sentences) - 84.6*(syllables/wc);
+  return Math.max(0, Math.min(100, Math.round(score)));
+}
+
+function fleschLabel(score) {
+  if (score >= 70) return { label:'Easy to read', cls:'val-good' };
+  if (score >= 50) return { label:'Fairly readable', cls:'val-info' };
+  if (score >= 30) return { label:'Difficult', cls:'val-warn' };
+  return { label:'Very difficult', cls:'val-bad' };
+}
+
+function detectTone(text, aggressiveHits, fillerHits, passiveCount, wc) {
+  const agScore = aggressiveHits.length;
+  const passRatio = passiveCount / Math.max(wc, 1);
+
+  if (agScore >= 3)   return { tone:'Aggressive',         cls:'tone-aggressive',   emoji:'🔴', desc:'Several confrontational or accusatory phrases detected.' };
+  if (agScore >= 1)   return { tone:'Passive-Aggressive', cls:'tone-passive-ag',   emoji:'🟠', desc:'One or more phrases that may come across as pointed or resentful.' };
+  if (passRatio > 0.06) return { tone:'Too Formal / Evasive', cls:'tone-formal',  emoji:'🔵', desc:'High passive-voice use — sounds distant or corporate.' };
+  if (fillerHits.length >= 3) return { tone:'Too Casual / Generic', cls:'tone-casual', emoji:'🟡', desc:'Multiple filler phrases make the email feel impersonal.' };
+  return { tone:'Professional ✓',  cls:'tone-optimal', emoji:'🟢', desc:'Tone looks good — confident and respectful.' };
+}
+
+function lengthVerdict(wc) {
+  if (wc < 20)  return { label:'Too short', cls:'val-bad',  advice:'Under 20 words can seem abrupt. Add context or a clear ask.' };
+  if (wc < 50)  return { label:'Concise',   cls:'val-good', advice:'Great length for a quick reply or update.' };
+  if (wc <= 150) return { label:'Optimal',  cls:'val-good', advice:'Sweet spot for business email (50–150 words).' };
+  if (wc <= 250) return { label:'A bit long', cls:'val-warn', advice:'Consider cutting context or moving detail to an attachment.' };
+  return { label:'Too long', cls:'val-bad', advice:'Over 250 words — most readers won\'t finish it. Cut ruthlessly.' };
+}
+
+function highlightText(text, fillerMatches, aggressiveMatches, passiveMatches) {
+  // Build a span-level highlight map
+  const regions = [];
+
+  function addRegions(arr, cls) {
+    arr.forEach(({ start, end }) => regions.push({ start, end, cls }));
+  }
+
+  addRegions(fillerMatches.map(m=>({start:m.index,end:m.index+m[0].length})), 'filler');
+  addRegions(aggressiveMatches.map(m=>({start:m.index,end:m.index+m[0].length})), 'aggressive');
+  addRegions(passiveMatches.map(m=>({start:m.index,end:m.index+m[0].length})), 'passive');
+
+  if (regions.length === 0) return escHtml(text);
+
+  // Sort by start, then merge overlapping
+  regions.sort((a,b)=>a.start-b.start);
+  let result = '';
+  let cursor = 0;
+  for (const r of regions) {
+    if (r.start < cursor) continue; // skip overlap
+    result += escHtml(text.slice(cursor, r.start));
+    result += `<mark class="${r.cls}">${escHtml(text.slice(r.start, r.end))}</mark>`;
+    cursor = r.end;
+  }
+  result += escHtml(text.slice(cursor));
+  return result;
+}
+
+function findMatches(text, patterns) {
+  const all = [];
+  patterns.forEach(p => {
+    const re = new RegExp(p.match.source, p.match.flags.includes('g') ? p.match.flags : p.match.flags+'g');
+    let m;
+    re.lastIndex = 0;
+    while ((m = re.exec(text)) !== null) {
+      all.push({ ...m, meta: p });
+    }
+  });
+  return all;
+}
+
+function findPassive(text) {
+  const re = new RegExp(PASSIVE_RE.source, PASSIVE_RE.flags);
+  re.lastIndex = 0;
+  const all = [];
+  let m;
+  while ((m = re.exec(text)) !== null) all.push(m);
+  return all;
+}
+
+function analyse() {
+  const text = document.getElementById('email-input').value;
+  if (!text.trim()) return;
+
+  const wc             = countWords(text);
+  const fScore         = fleschScore(text);
+  const fLabel         = fleschLabel(fScore);
+  const lVerdict       = lengthVerdict(wc);
+
+  const fillerMatches     = findMatches(text, FILLER_PHRASES.filter(f=>f.fix));
+  const aggressiveMatches = findMatches(text, AGGRESSIVE);
+  const passiveMatches    = findPassive(text);
+  const toneInfo          = detectTone(text, aggressiveMatches, fillerMatches, passiveMatches.length, wc);
+
+  // Check for long urgent email (call instead)
+  const isUrgent = /\bASAP\b|urgently|immediately|right\s+away/i.test(text);
+  const isLong   = wc > 200;
+  const suggestCall = isUrgent && isLong;
+
+  // Build results
+  const rPanel = document.getElementById('results-panel');
+  rPanel.innerHTML = buildScoreCard(toneInfo, wc, lVerdict, fScore, fLabel, passiveMatches.length) +
+    buildIssues(fillerMatches, aggressiveMatches, passiveMatches, lVerdict, wc, suggestCall);
+
+  // Show preview
+  const previewPanel = document.getElementById('preview-panel');
+  previewPanel.style.display = 'block';
+  document.getElementById('preview-box').innerHTML =
+    highlightText(text, fillerMatches, aggressiveMatches, passiveMatches);
+}
+
+function buildScoreCard(tone, wc, len, fScore, fLabel, passiveCount) {
+  const passivePct = wc > 0 ? Math.round((passiveCount / wc) * 100) : 0;
+  const passiveCls = passivePct <= 5 ? 'val-good' : passivePct <= 12 ? 'val-warn' : 'val-bad';
+  return `<div class="score-card">
+    <p class="panel-title">Analysis Results</p>
+    <div class="overall-row">
+      <span class="tone-badge ${tone.cls}">${tone.emoji} ${tone.tone}</span>
+    </div>
+    <p style="font-size:.8rem;color:var(--muted);margin-bottom:14px">${tone.desc}</p>
+    <div class="metric-grid">
+      <div class="metric">
+        <div class="metric-label">Word Count</div>
+        <div class="metric-value ${len.cls}">${wc}</div>
+        <div class="metric-sub">${len.label}</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Readability</div>
+        <div class="metric-value ${fLabel.cls}">${fScore}</div>
+        <div class="metric-sub">${fLabel.label}</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Passive Voice</div>
+        <div class="metric-value ${passiveCls}">${passiveCount} <span style="font-size:.7rem;font-weight:400">(${passivePct}%)</span></div>
+        <div class="metric-sub">${passiveCount <= 2 ? 'Low — good' : passiveCount <= 5 ? 'Moderate' : 'High — simplify'}</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Length</div>
+        <div class="metric-value ${len.cls}">${len.label}</div>
+        <div class="metric-sub">Ideal: 50–150 words</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function buildIssues(fillerMatches, aggressiveMatches, passiveMatches, lVerdict, wc, suggestCall) {
+  let html = '<div class="issues-card"><p class="panel-title">Specific Issues &amp; Fixes</p>';
+  let count = 0;
+
+  // Length advice
+  if (lVerdict.cls !== 'val-good' || wc < 50 || wc > 150) {
+    html += issue('issue-length', '📏 Length', lVerdict.advice, null);
+    count++;
+  }
+
+  // Aggressive
+  const seenAgg = new Set();
+  aggressiveMatches.forEach(m => {
+    const key = m[0].toLowerCase();
+    if (seenAgg.has(key)) return;
+    seenAgg.add(key);
+    html += issue('issue-aggressive', `🔴 ${m.meta.label}`, `"${escHtml(m[0])}"`, m.meta.fix);
+    count++;
+  });
+
+  // Filler
+  const seenFill = new Set();
+  fillerMatches.forEach(m => {
+    const key = m[0].toLowerCase();
+    if (seenFill.has(key)) return;
+    seenFill.add(key);
+    html += issue('issue-filler', '🟡 Filler Phrase', `"${escHtml(m[0])}"`, m.meta.fix);
+    count++;
+  });
+
+  // Passive voice summary
+  if (passiveMatches.length > 3) {
+    const examples = [...new Set(passiveMatches.slice(0,2).map(m=>m[0]))].join('", "');
+    html += issue('issue-passive', '🔵 High Passive Voice',
+      `${passiveMatches.length} passive constructions detected (e.g. "${escHtml(examples)}").`,
+      'Rewrite as active: instead of "the report was sent", use "I sent the report".');
+    count++;
+  }
+
+  // Call suggestion
+  if (suggestCall) {
+    html += issue('issue-call', '📞 Consider a Call Instead',
+      'Your email is long AND urgent — the recipient may miss the urgency.',
+      'For time-sensitive complex topics, a quick call or Slack message is faster and clearer.');
+    count++;
+  }
+
+  if (count === 0) {
+    html += '<div class="no-issues">✅ Looks great! No major issues found.</div>';
+  }
+
+  html += '</div>';
+  return html;
+}
+
+function issue(cls, label, text, fix) {
+  return `<div class="issue-item ${cls}">
+    <div class="issue-label">${label}</div>
+    <div class="issue-text">${text}</div>
+    ${fix ? `<div class="issue-fix">→ ${escHtml(fix)}</div>` : ''}
+  </div>`;
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function onInput() {
+  const wc = countWords(document.getElementById('email-input').value);
+  document.getElementById('wc-display').textContent = wc + (wc===1?' word':' words');
+}
+
+function clearInput() {
+  document.getElementById('email-input').value = '';
+  document.getElementById('wc-display').textContent = '0 words';
+  document.getElementById('preview-panel').style.display = 'none';
+  document.getElementById('results-panel').innerHTML = `<div class="panel" style="text-align:center;padding:40px 20px;color:var(--muted);font-size:.88rem"><div style="font-size:2rem;margin-bottom:8px">✉️</div>Paste your email and click <strong>Analyse Email</strong></div>`;
+}
+
+// ─── FAQ ──────────────────────────────────────────────────────────────────────
+const FAQ = [
+  { q:"Does my email sound rude?", a:"Paste your email into our checker. It scans for aggressive phrases, passive-aggressive patterns, overly blunt sentences, and flags exactly which lines may read as rude or confrontational." },
+  { q:"What is the ideal length for a business email?", a:"Research suggests 50–125 words gets the highest reply rate. Our tool flags emails under 30 words (too abrupt) and over 200 words (too long), with a sweet-spot indicator at 75–150 words." },
+  { q:"What are filler phrases in emails?", a:"Filler phrases are generic openers or closers that add no value — 'Hope this email finds you well', 'Just checking in', 'As per my last email', 'Please find attached', 'Touching base'. They make emails feel impersonal and waste the reader\'s time." },
+  { q:"Is my email text stored or sent anywhere?", a:"No. All analysis runs entirely in your browser using JavaScript. Nothing is ever sent to a server. Your email text is 100% private." },
+  { q:"What is passive voice in emails and why does it matter?", a:"Passive voice ('the report was sent by me') is weaker and less clear than active voice ('I sent the report'). High passive voice makes emails sound evasive or bureaucratic. Our tool counts passive constructions and suggests rewrites." },
+  { q:"How is the Flesch-Kincaid readability score calculated?", a:"The Flesch Reading Ease score measures how easy text is to read, based on sentence length and syllable count. Scores above 60 are easy to read — ideal for email." }
+];
+
+function initFaq() {
+  const list = document.getElementById('faq-list');
+  FAQ.forEach(({ q, a }) => {
+    const item = document.createElement('div');
+    item.className = 'faq-item';
+    item.innerHTML = `<div class="faq-q" onclick="this.closest('.faq-item').classList.toggle('open')">${escHtml(q)}<svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div><div class="faq-a">${escHtml(a)}</div>`;
+    list.appendChild(item);
+  });
+}
+
+initFaq();
+</script>
+</body>
+</html>
